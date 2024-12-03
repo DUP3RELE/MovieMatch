@@ -25,6 +25,7 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 
 	const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 	const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+	const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 	const [additionalInfo, setAdditionalInfo] = useState("");
 	const [letterCount, setLetterCount] = useState(0);
 	const maxLetters = 180;
@@ -33,7 +34,10 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 
 	const textColor = colorScheme === "dark" ? "#FFF" : "#000";
 
-	const toggleSelection = (type: "genre" | "type", value: string) => {
+	const toggleSelection = (
+		type: "genre" | "type" | "platform",
+		value: string
+	) => {
 		if (type === "genre") {
 			setSelectedGenres((prev) =>
 				prev.includes(value)
@@ -42,6 +46,12 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			);
 		} else if (type === "type") {
 			setSelectedTypes((prev) =>
+				prev.includes(value)
+					? prev.filter((item) => item !== value)
+					: [...prev, value]
+			);
+		} else if (type === "platform") {
+			setSelectedPlatforms((prev) =>
 				prev.includes(value)
 					? prev.filter((item) => item !== value)
 					: [...prev, value]
@@ -61,7 +71,9 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 		if (selectedGenres.length === 0 || selectedTypes.length === 0) {
 			Alert.alert("Błąd", "Proszę wybrać gatunek i rodzaj filmu.");
 		} else {
-			console.log("Searching for movie...");
+			console.log(
+				`Searching for movie... ${selectedGenres}, ${selectedPlatforms}, ${selectedTypes}, ${additionalInfo}`
+			);
 		}
 	};
 
@@ -157,26 +169,23 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			<ThemedView style={styles.stepContainer}>
 				<ThemedText type='subtitle'>Krok 3: Wybierz platformę</ThemedText>
 				<View style={styles.buttonContainer}>
-					{[
-						"dowolna",
-						"HBO MAX",
-						"NETFLIX",
-						"DISNEY+",
-						"PRIME",
-						"CANAL+",
-					].map((type) => (
-						<ThemedView
-							key={type}
-							style={[
-								styles.typeButton,
-								selectedTypes.includes(type) && styles.selectedButton,
-							]}
-						>
-							<ThemedText onPress={() => toggleSelection("type", type)}>
-								{type}
-							</ThemedText>
-						</ThemedView>
-					))}
+					{["dowolna", "HBO MAX", "NETFLIX", "DISNEY+", "PRIME", "CANAL+"].map(
+						(platform) => (
+							<ThemedView
+								key={platform}
+								style={[
+									styles.typeButton,
+									selectedPlatforms.includes(platform) && styles.selectedButton,
+								]}
+							>
+								<ThemedText
+									onPress={() => toggleSelection("platform", platform)}
+								>
+									{platform}
+								</ThemedText>
+							</ThemedView>
+						)
+					)}
 				</View>
 			</ThemedView>
 
