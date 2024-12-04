@@ -28,11 +28,22 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 	const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 	const [additionalInfo, setAdditionalInfo] = useState("");
 	const [letterCount, setLetterCount] = useState(0);
+	const [submittedData, setSubmittedData] = useState(null);
 	const maxLetters = 180;
 
 	const colorScheme = useColorScheme();
 
 	const textColor = colorScheme === "dark" ? "#FFF" : "#000";
+
+	const handleSubmit = () => {
+		const dataToSend = {
+			genres: selectedGenres,
+			types: selectedTypes,
+			platforms: selectedPlatforms,
+			info: additionalInfo,
+		};
+		setSubmittedData(dataToSend);
+	};
 
 	const toggleSelection = (
 		type: "genre" | "type" | "platform",

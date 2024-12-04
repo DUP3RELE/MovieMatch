@@ -11,7 +11,7 @@ const completion = await openai.chat.completions.create({
 		},
 		{
 			role: "user",
-			content: "Write a haiku about recursion in programming.",
+			content: "",
 		},
 	],
 });
