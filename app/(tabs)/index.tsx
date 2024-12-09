@@ -22,24 +22,30 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 	const defaultYoutubeLink = "https://www.youtube.com/embed/dQw4w9WgXcQ";
-	const videoUrl = youtubeLink || defaultYoutubeLink;
 
+	const [generatedYoutubeLink, setGeneratedYoutubeLink] = useState<
+		string | null
+	>(null);
+	const videoUrl = generatedYoutubeLink || defaultYoutubeLink;
 	const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 	const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
 	const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 	const [additionalInfo, setAdditionalInfo] = useState("");
 	const [letterCount, setLetterCount] = useState(0);
-	const [submittedData, setSubmittedData] = useState(null);
-	const [generatedYoutubeLink, setGeneratedYoutubeLink] = useState<string | null>(null);
+	const [submittedData, setSubmittedData] = useState<null | {
+		genres: string[];
+		types: string[];
+		platforms: string[];
+		info: string;
+	}>(null);
 	const [triggerFetch, setTriggerFetch] = useState(false);
 	const maxLetters = 180;
 
 	const colorScheme = useColorScheme();
 	const textColor = colorScheme === "dark" ? "#FFF" : "#000";
 
-	const handleLinkGenerated = (link: string) => {
-		// Ustawienie wygenerowanego linku do stanu
-		setGeneratedYoutubeLink(link);
+	const handleLinkGenerated = (onLinkGenerated: string) => {
+		setGeneratedYoutubeLink(onLinkGenerated);
 	};
 
 	const handleSubmit = () => {
@@ -89,9 +95,11 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 		if (selectedGenres.length === 0 || selectedTypes.length === 0) {
 			Alert.alert("Błąd", "Proszę wybrać gatunek i rodzaj filmu.");
 		} else {
+			setTriggerFetch(true);
 			console.log(
 				`Wyszukiwanie filmu... Gatunki: ${selectedGenres}, Platformy: ${selectedPlatforms}, Typy: ${selectedTypes}, Dodatkowe info: ${additionalInfo}`
 			);
+			handleSubmit();
 		}
 	};
 
@@ -124,12 +132,12 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			}
 		>
 			<ThemedView style={styles.titleContainer}>
-				<ThemedText type="title">MovieMatch</ThemedText>
+				<ThemedText type='title'>MovieMatch</ThemedText>
 				<HelloWave />
 			</ThemedView>
 
 			<ThemedView style={styles.stepContainer}>
-				<ThemedText type="subtitle">Krok 1: Wybierz gatunek</ThemedText>
+				<ThemedText type='subtitle'>Krok 1: Wybierz gatunek</ThemedText>
 				<View style={styles.buttonContainer}>
 					{[
 						"horror",
@@ -158,7 +166,7 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			</ThemedView>
 
 			<ThemedView style={styles.stepContainer}>
-				<ThemedText type="subtitle">Krok 2: Wybierz rodzaj</ThemedText>
+				<ThemedText type='subtitle'>Krok 2: Wybierz rodzaj</ThemedText>
 				<View style={styles.buttonContainer}>
 					{[
 						"animowany",
@@ -185,7 +193,7 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			</ThemedView>
 
 			<ThemedView style={styles.stepContainer}>
-				<ThemedText type="subtitle">Krok 3: Wybierz platformę</ThemedText>
+				<ThemedText type='subtitle'>Krok 3: Wybierz platformę</ThemedText>
 				<View style={styles.buttonContainer}>
 					{["dowolna", "HBO MAX", "NETFLIX", "DISNEY+", "PRIME", "CANAL+"].map(
 						(platform) => (
@@ -196,7 +204,9 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 									selectedPlatforms.includes(platform) && styles.selectedButton,
 								]}
 							>
-								<ThemedText onPress={() => toggleSelection("platform", platform)}>
+								<ThemedText
+									onPress={() => toggleSelection("platform", platform)}
+								>
 									{platform}
 								</ThemedText>
 							</ThemedView>
@@ -206,14 +216,16 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			</ThemedView>
 
 			<ThemedView style={styles.stepContainer}>
-				<ThemedText type="subtitle">Krok 4: Wpisz dodatkowe zalecenia</ThemedText>
+				<ThemedText type='subtitle'>
+					Krok 4: Wpisz dodatkowe zalecenia
+				</ThemedText>
 				<TextInput
 					style={[styles.input, { color: textColor }]}
 					multiline
 					maxLength={maxLetters}
 					onChangeText={handleAdditionalInfoChange}
 					value={additionalInfo}
-					placeholder="Wpisz maksymalnie 180 liter"
+					placeholder='Wpisz maksymalnie 180 liter'
 				/>
 				<Text style={styles.letterCount}>
 					{letterCount}/{maxLetters} liter
@@ -221,16 +233,29 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			</ThemedView>
 
 			<View style={styles.buttonContainer}>
-				<TouchableOpacity style={styles.findButton} onPress={handleFindMovie}>
+				<TouchableOpacity
+					style={styles.findButton}
+					onPress={handleFindMovie}
+				>
 					<Text style={styles.buttonText}>Znajdź film</Text>
 				</TouchableOpacity>
 
-				<TouchableOpacity style={styles.findButton} onPress={handleFindRandomMovie}>
+				<TouchableOpacity
+					style={styles.findButton}
+					onPress={handleFindRandomMovie}
+				>
 					<Text style={styles.buttonText}>Znajdź losowy film</Text>
 				</TouchableOpacity>
 			</View>
 
-			<OpenAiComponent onLinkGenerated={handleLinkGenerated} />
+			<OpenAiComponent
+				genres={selectedGenres}
+				types={selectedTypes}
+				platforms={selectedPlatforms}
+				additionalInfo={additionalInfo}
+				triggerFetch={triggerFetch}
+				onLinkGenerated={handleLinkGenerated}
+			/>
 		</ParallaxScrollView>
 	);
 }

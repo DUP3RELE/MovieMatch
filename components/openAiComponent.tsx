@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
-import OpenAI from "openai";
+import { OpenAI, OpenAIError } from "openai";
+import config from "../config.json";
 
 interface OpenAiComponentProps {
 	genres: string[];
 	types: string[];
 	platforms: string[];
 	additionalInfo: string;
-	onLinkGenerated: (link: string) => void; // Funkcja callback do przekazania linku
-	triggerFetch: boolean; // Nowy prop, który kontroluje, czy fetch ma być uruchomiony
+	onLinkGenerated: (link: string) => void;
+	triggerFetch: boolean;
 }
 
 export default function OpenAiComponent({
@@ -15,51 +16,58 @@ export default function OpenAiComponent({
 	types,
 	platforms,
 	additionalInfo,
-	onLinkGenerated, // Otrzymujemy funkcję jako props
-	triggerFetch, // Kontroluje, kiedy wywołać API
+	onLinkGenerated,
+	triggerFetch,
 }: OpenAiComponentProps) {
 	const [response, setResponse] = useState<string | null>(null);
 
-	// Funkcja do wywołania OpenAI API
 	const fetchMovieSuggestion = async () => {
-		const openai = new OpenAI({
-			apiKey: "your-openai-api-key", // Twój klucz API OpenAI
-		});
+		"use server";
+		try {
+			const client = new OpenAI({
+				apiKey: config.OPENAI_API_KEY,
+				dangerouslyAllowBrowser: true,
+			});
 
-		const completion = await openai.chat.completions.create({
-			model: "gpt-4o-mini",
-			messages: [
-				{
-					role: "system",
-					content:
-						"You are a movie suggestion assistant. You return only links to YouTube trailers of movies.",
-				},
-				{
-					role: "user",
-					content: `Find a YouTube trailer for a movie that matches these preferences. 
-						Genres: ${genres.join(", ")}, 
-						Types: ${types.join(", ")}, 
-						Platforms: ${platforms.join(", ")}, 
-						Additional Info: ${additionalInfo}. 
-						Return only the YouTube link.`,
-				},
-			],
-		});
+			const response = await client.chat.completions.create({
+				model: "gpt-4o",
+				messages: [
+					{
+						role: "system",
+						content:
+							"You are a movie suggestion assistant. You return only links to YouTube trailers of movies.",
+					},
+					{
+						role: "user",
+						content: `Find a YouTube trailer for a movie that matches these preferences: 
+							Genres: ${genres.join(", ")}, 
+							Types: ${types.join(", ")}, 
+							Platforms: ${platforms.join(", ")}, 
+							Additional Info: ${additionalInfo}. 
+							Return only the YouTube link. Be sure that this link is avaliable on Youtube`,
+					},
+				],
+			});
 
-		// Ustaw odpowiedź modelu
-		const youtubeLink = completion.choices[0].message.content.trim();
-		setResponse(youtubeLink);
+			const youtubeLink: any = response.choices[0]?.message?.content?.trim();
+			console.log(youtubeLink);
+			setResponse(youtubeLink);
 
-		// Przekaż link do callbacka
-		onLinkGenerated(youtubeLink);
+			onLinkGenerated(youtubeLink);
+		} catch (error: any) {
+			if (error instanceof OpenAIError) {
+				console.error(`Błąd podczas komunikacji z OpenAI: ${error.message}`);
+			} else {
+				console.error(`Wystąpił nieoczekiwany błąd: ${error.message}`);
+			}
+		}
 	};
 
-	// Użyj useEffect, aby wywołać API tylko, gdy triggerFetch = true
 	useEffect(() => {
 		if (triggerFetch && genres.length > 0 && types.length > 0) {
 			fetchMovieSuggestion();
 		}
 	}, [triggerFetch]);
 
-	return null; // Komponent nie renderuje nic
+	return response;
 }
