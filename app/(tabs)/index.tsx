@@ -15,6 +15,7 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import OpenAiComponent from "@/components/openAiComponent";
+import { ActivityIndicator } from "react-native";
 
 interface HomeScreenProps {
 	youtubeLink?: string;
@@ -32,6 +33,7 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 	const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 	const [additionalInfo, setAdditionalInfo] = useState("");
 	const [letterCount, setLetterCount] = useState(0);
+	const [isLoading, setIsLoading] = useState(false);
 	const [submittedData, setSubmittedData] = useState<null | {
 		genres: string[];
 		types: string[];
@@ -44,8 +46,14 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 	const colorScheme = useColorScheme();
 	const textColor = colorScheme === "dark" ? "#FFF" : "#000";
 
-	const handleLinkGenerated = (onLinkGenerated: string) => {
-		setGeneratedYoutubeLink(onLinkGenerated);
+	const handleLinkGenerated = (link: string) => {
+		setIsLoading(false);
+		if (link.includes("watch?v=")) {
+			const embedLink = link.replace("watch?v=", "embed/");
+			setGeneratedYoutubeLink(embedLink);
+		} else {
+			setGeneratedYoutubeLink(link);
+		}
 	};
 
 	const handleSubmit = () => {
@@ -96,6 +104,7 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 			Alert.alert("Błąd", "Proszę wybrać gatunek i rodzaj filmu.");
 		} else {
 			setTriggerFetch(true);
+			setIsLoading(true);
 			console.log(
 				`Wyszukiwanie filmu... Gatunki: ${selectedGenres}, Platformy: ${selectedPlatforms}, Typy: ${selectedTypes}, Dodatkowe info: ${additionalInfo}`
 			);
@@ -135,118 +144,130 @@ export default function HomeScreen({ youtubeLink }: HomeScreenProps) {
 				<ThemedText type='title'>MovieMatch</ThemedText>
 				<HelloWave />
 			</ThemedView>
-
-			<ThemedView style={styles.stepContainer}>
-				<ThemedText type='subtitle'>Krok 1: Wybierz gatunek</ThemedText>
-				<View style={styles.buttonContainer}>
-					{[
-						"horror",
-						"komedia",
-						"akcja",
-						"sci-fi",
-						"thriller",
-						"romantyczny",
-						"dokumentalny",
-						"biograficzny",
-						"dramat",
-					].map((genre) => (
-						<ThemedView
-							key={genre}
-							style={[
-								styles.genreButton,
-								selectedGenres.includes(genre) && styles.selectedButton,
-							]}
-						>
-							<ThemedText onPress={() => toggleSelection("genre", genre)}>
-								{genre}
-							</ThemedText>
-						</ThemedView>
-					))}
+			{isLoading ? (
+				<View style={styles.loadingContainer}>
+					<ActivityIndicator
+						size='large'
+						color='#4CAF50'
+					/>
 				</View>
-			</ThemedView>
-
-			<ThemedView style={styles.stepContainer}>
-				<ThemedText type='subtitle'>Krok 2: Wybierz rodzaj</ThemedText>
-				<View style={styles.buttonContainer}>
-					{[
-						"animowany",
-						"dla dzieci",
-						"dla dorosłych",
-						"niszowy",
-						"popularny",
-						"łatwy w odbiorze",
-						"trudny w odbiorze",
-					].map((type) => (
-						<ThemedView
-							key={type}
-							style={[
-								styles.typeButton,
-								selectedTypes.includes(type) && styles.selectedButton,
-							]}
-						>
-							<ThemedText onPress={() => toggleSelection("type", type)}>
-								{type}
-							</ThemedText>
-						</ThemedView>
-					))}
-				</View>
-			</ThemedView>
-
-			<ThemedView style={styles.stepContainer}>
-				<ThemedText type='subtitle'>Krok 3: Wybierz platformę</ThemedText>
-				<View style={styles.buttonContainer}>
-					{["dowolna", "HBO MAX", "NETFLIX", "DISNEY+", "PRIME", "CANAL+"].map(
-						(platform) => (
-							<ThemedView
-								key={platform}
-								style={[
-									styles.typeButton,
-									selectedPlatforms.includes(platform) && styles.selectedButton,
-								]}
-							>
-								<ThemedText
-									onPress={() => toggleSelection("platform", platform)}
+			) : (
+				<>
+					<ThemedView style={styles.stepContainer}>
+						<ThemedText type='subtitle'>Krok 1: Wybierz gatunek</ThemedText>
+						<View style={styles.buttonContainer}>
+							{[
+								"horror",
+								"komedia",
+								"akcja",
+								"sci-fi",
+								"thriller",
+								"romantyczny",
+								"dokumentalny",
+								"biograficzny",
+								"dramat",
+							].map((genre) => (
+								<ThemedView
+									key={genre}
+									style={[
+										styles.genreButton,
+										selectedGenres.includes(genre) && styles.selectedButton,
+									]}
 								>
-									{platform}
-								</ThemedText>
-							</ThemedView>
-						)
-					)}
-				</View>
-			</ThemedView>
+									<ThemedText onPress={() => toggleSelection("genre", genre)}>
+										{genre}
+									</ThemedText>
+								</ThemedView>
+							))}
+						</View>
+					</ThemedView>
+					<ThemedView style={styles.stepContainer}>
+						<ThemedText type='subtitle'>Krok 2: Wybierz rodzaj</ThemedText>
+						<View style={styles.buttonContainer}>
+							{[
+								"animowany",
+								"dla dzieci",
+								"dla dorosłych",
+								"niszowy",
+								"popularny",
+								"łatwy w odbiorze",
+								"trudny w odbiorze",
+							].map((type) => (
+								<ThemedView
+									key={type}
+									style={[
+										styles.typeButton,
+										selectedTypes.includes(type) && styles.selectedButton,
+									]}
+								>
+									<ThemedText onPress={() => toggleSelection("type", type)}>
+										{type}
+									</ThemedText>
+								</ThemedView>
+							))}
+						</View>
+					</ThemedView>
+					<ThemedView style={styles.stepContainer}>
+						<ThemedText type='subtitle'>Krok 3: Wybierz platformę</ThemedText>
+						<View style={styles.buttonContainer}>
+							{[
+								"dowolna",
+								"HBO MAX",
+								"NETFLIX",
+								"DISNEY+",
+								"PRIME",
+								"CANAL+",
+							].map((platform) => (
+								<ThemedView
+									key={platform}
+									style={[
+										styles.typeButton,
+										selectedPlatforms.includes(platform) &&
+											styles.selectedButton,
+									]}
+								>
+									<ThemedText
+										onPress={() => toggleSelection("platform", platform)}
+									>
+										{platform}
+									</ThemedText>
+								</ThemedView>
+							))}
+						</View>
+					</ThemedView>
+					<ThemedView style={styles.stepContainer}>
+						<ThemedText type='subtitle'>
+							Krok 4: Wpisz dodatkowe zalecenia
+						</ThemedText>
+						<TextInput
+							style={[styles.input, { color: textColor }]}
+							multiline
+							maxLength={maxLetters}
+							onChangeText={handleAdditionalInfoChange}
+							value={additionalInfo}
+							placeholder='Wpisz maksymalnie 180 liter'
+						/>
+						<Text style={styles.letterCount}>
+							{letterCount}/{maxLetters} liter
+						</Text>
+					</ThemedView>
+					<View style={styles.buttonContainer}>
+						<TouchableOpacity
+							style={styles.findButton}
+							onPress={handleFindMovie}
+						>
+							<Text style={styles.buttonText}>Znajdź film</Text>
+						</TouchableOpacity>
 
-			<ThemedView style={styles.stepContainer}>
-				<ThemedText type='subtitle'>
-					Krok 4: Wpisz dodatkowe zalecenia
-				</ThemedText>
-				<TextInput
-					style={[styles.input, { color: textColor }]}
-					multiline
-					maxLength={maxLetters}
-					onChangeText={handleAdditionalInfoChange}
-					value={additionalInfo}
-					placeholder='Wpisz maksymalnie 180 liter'
-				/>
-				<Text style={styles.letterCount}>
-					{letterCount}/{maxLetters} liter
-				</Text>
-			</ThemedView>
-
-			<View style={styles.buttonContainer}>
-				<TouchableOpacity
-					style={styles.findButton}
-					onPress={handleFindMovie}
-				>
-					<Text style={styles.buttonText}>Znajdź film</Text>
-				</TouchableOpacity>
-
-				<TouchableOpacity
-					style={styles.findButton}
-					onPress={handleFindRandomMovie}
-				>
-					<Text style={styles.buttonText}>Znajdź losowy film</Text>
-				</TouchableOpacity>
-			</View>
+						<TouchableOpacity
+							style={styles.findButton}
+							onPress={handleFindRandomMovie}
+						>
+							<Text style={styles.buttonText}>Znajdź losowy film</Text>
+						</TouchableOpacity>
+					</View>{" "}
+				</>
+			)}
 
 			<OpenAiComponent
 				genres={selectedGenres}
@@ -322,5 +343,11 @@ const styles = StyleSheet.create({
 		color: "#fff",
 		fontSize: 16,
 		textAlign: "center",
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+		padding: 20,
 	},
 });

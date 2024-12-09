@@ -44,7 +44,7 @@ export default function OpenAiComponent({
 							Types: ${types.join(", ")}, 
 							Platforms: ${platforms.join(", ")}, 
 							Additional Info: ${additionalInfo}. 
-							Return only the YouTube link. Be sure that this link is avaliable on Youtube`,
+							Return only the YouTube link. Only return trailers that have a significant number of views and are public.`,
 					},
 				],
 			});
